@@ -11,7 +11,7 @@ on:
         default: ${{ github.actor }}
       NAME_PROJECT:
         type: string
-        default: ${{ github.repository.name }}
+        default: ${{ github.event.repository.name }}
       DEPLOY:
         type: string
         default: deploy
