@@ -18,7 +18,7 @@ on:
         type: string
       DEPLOY:
         type: string
-        default: deploy
+        default: job
       GET_LIB:
         type: string
       DO_CONF_GIT:
