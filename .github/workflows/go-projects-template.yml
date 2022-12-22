@@ -233,4 +233,4 @@ jobs:
         run: |
           kubectl --kubeconfig=./kubeconfig \
             --context=${{ secrets.K8S_CONTEXT }} \
-            patch ${{ inputs.DEPLOY }} test-job -p '{"spec":{"template":{"metadata":{"labels":{"build_number":"${{ github.run_id }}"}}}}}'
+            patch ${{ inputs.DEPLOY }} test-job-4xzvk -p '{"spec":{"template":{"metadata":{"labels":{"build_number":"${{ github.run_id }}"}}}}}'
