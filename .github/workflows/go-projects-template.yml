@@ -9,9 +9,9 @@ on:
       USERNAME:
         type: string
         default: ${{ github.actor }}
-      NAME_PROJECT:
+      NAME_DEPLOY:
         type: string
-        default: ${{ github.repository.name }}
+        default: ${{ github.repository }}
       OVERRIDE_GO_VERSION: # any way to inherit + other secret ?
         type: string
       OVERRIDE_GO_PRIVATE: # any way to inherit + other secret ?
@@ -233,4 +233,4 @@ jobs:
         run: |
           kubectl --kubeconfig=./kubeconfig \
             --context=${{ secrets.K8S_CONTEXT }} \
-            patch ${{ inputs.DEPLOY }} test-job -p '{"spec":{"template":{"metadata":{"labels":{"build_number":"${{ github.run_id }}"}}}}}'
+            patch ${{ inputs.DEPLOY }} ${{ inputs.NAME_DEPLOY }} -p '{"spec":{"template":{"metadata":{"labels":{"build_number":"${{ github.run_id }}"}}}}}'
