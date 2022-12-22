@@ -119,7 +119,7 @@ jobs:
         if: "${{ inputs.DO_SONAR == true }}"
         timeout-minutes: 5
         with:
-          failure-not-an-option: true
+          ignore-errors: true
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
