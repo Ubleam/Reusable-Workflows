@@ -216,9 +216,6 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
 
-    env:
-      NAME_REPO: ${{ inputs.IMAGE_NAME | cut -d "/" -f 2 }}
-
     steps:
       - name: Set up Kubectl
         uses: azure/setup-kubectl@v1
@@ -234,6 +231,7 @@ jobs:
 
       - name: Deploy to ${{ secrets.K8S_CONTEXT }}
         run: |
+          REPO_NAME=$(echo ${{ inputs.IMAGE_NAME }} | cut -d "/" -f 2)
           kubectl --kubeconfig=./kubeconfig \
             --context=${{ secrets.K8S_CONTEXT }} \
-            patch ${{ inputs.DEPLOY }} ${{ env.NAME_REPO }} -p '{"spec":{"template":{"metadata":{"labels":{"build_number":"${{ github.run_id }}"}}}}}'
+            patch ${{ inputs.DEPLOY }} $REPO_NAME -p '{"spec":{"template":{"metadata":{"labels":{"build_number":"${{ github.run_id }}"}}}}}'
