@@ -115,13 +115,11 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
 
-      - uses: sonarsource/sonarqube-quality-gate-action@master
-        if: "${{ inputs.DO_SONAR == true }}"
-        timeout-minutes: 5
-        with:
-          failure-not-an-option: true
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      # - uses: sonarsource/sonarqube-quality-gate-action@master
+      #   if: "${{ inputs.DO_SONAR == true }}"
+      #   timeout-minutes: 5
+      #   env:
+      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
       - name: Lint
         if: "${{ always() && inputs.DO_LINT == true }}"
