@@ -187,4 +187,4 @@ jobs:
           REPO_NAME=$(echo ${{ inputs.IMAGE_NAME }} | cut -d "/" -f 1)
           kubectl --kubeconfig=./kubeconfig \
             --context=${{ secrets.K8S_CONTEXT }} \
-            patch $REPO_NAME-${{ inputs.DEPLOY }} -p '{"spec":{"template":{"metadata":{"labels":{"build_number":"${{ github.run_id }}"}}}}}'
+            patch ${{ inputs.IMAGE_NAME }}-${{ inputs.DEPLOY }} -p '{"spec":{"template":{"metadata":{"labels":{"build_number":"${{ github.run_id }}"}}}}}'
