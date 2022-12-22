@@ -1,0 +1,190 @@
+name: Node projects CI
+
+on:
+  workflow_call:
+    inputs:
+      IMAGE_NAME:
+        type: string
+        default: ${{ github.repository }}
+      USERNAME:
+        type: string
+        default: ${{ github.actor }}
+      NAME_PROJECT:
+        type: string
+        default: ${{ github.repository.name }}
+      DEPLOY:
+        type: string
+        default: deploy
+      NODE_VERSION:
+        type: string
+        default: deploy
+      DO_CONF_GIT:
+        type: boolean
+        default: true
+      DO_BUILD:
+        type: boolean
+        default: true
+      DO_SONAR:
+        type: boolean
+        default: true      
+      DO_TEST:
+        type: boolean
+        default: true
+      DO_LINT:
+        type: boolean
+        default: true
+      DO_BUILD_DOCKER:
+        type: boolean
+        default: true
+      DO_DEPLOY:
+        type: boolean
+        default: true
+      
+    secrets:
+      REGISTRY:
+        required: true
+      GIT_CONFIG_KEY:
+        required: true
+      GIT_CONFIG_VALUE:
+        required: true
+      LIB_LINT:
+        required: true
+      CMD_LINT:
+        required: true
+      GH_PACKAGES:
+        required: true
+      KUBE_INT_CONFIG:
+        required: true
+      SONAR_TOKEN:
+        required: true
+      SONAR_HOST_URL:
+        required: true
+      K8S_CONTEXT:
+        required: true
+
+env:
+  REGISTRY: ${{ secrets.REGISTRY }}
+  GH_ACCESS_TOKEN: ${{ secrets.ACTIONS_ACCESS_TOKEN }}
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: Setup node environment (for building)
+        uses: actions/setup-node@v3
+        with:
+          node-version: 14.15.3
+          registry-url: ${{ secrets.OLD_REGISTRY_NPM }}
+          always-auth: true
+
+      - name: Cache node_modules
+        id: cache-node-modules
+        uses: actions/cache@v2
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Config Git
+        if: "${{ inputs.DO_CONF_GIT == true }}"
+        run: git config --global ${{ secrets.GIT_CONFIG_KEY }} ${{ secrets.GIT_CONFIG_VALUE }}
+
+      - name: Install dependencies
+        run: yarn
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+
+      - name: Test
+        run: yarn test
+
+      - name: Build
+        if: "${{ inputs.DO_BUILD == true }}"
+        run: 	yarn build:prod
+
+      - uses: sonarsource/sonarqube-scan-action@master
+        if: "${{ inputs.DO_SONAR == true }}"
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+
+      - uses: sonarsource/sonarqube-quality-gate-action@master
+        if: "${{ inputs.DO_SONAR == true }}"
+        timeout-minutes: 5
+        with:
+          failure-not-an-option: true
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      - name: Lint
+        if: "${{ always() && inputs.DO_LINT == true }}"
+        run: yarn lint
+
+      - name: Log in to the Container registry
+        if: "${{ github.event_name != 'pull_request' && inputs.DO_BUILD_DOCKER == true && always() }}"
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ secrets.REGISTRY }}
+          username: ${{ inputs.USERNAME }}
+          password: ${{ secrets.GH_PACKAGES }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        if: "${{ github.event_name != 'pull_request' && inputs.DO_BUILD_DOCKER == true && always() }}"
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ secrets.REGISTRY }}/${{ inputs.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+
+      - name: Set up QEMU
+        if: "${{ github.event_name != 'pull_request' && inputs.DO_BUILD_DOCKER == true && always() }}"
+        uses: docker/setup-qemu-action@v2
+
+      - name: Set up Docker Buildx
+        if: "${{ github.event_name != 'pull_request' && inputs.DO_BUILD_DOCKER == true && always() }}"
+        uses: docker/setup-buildx-action@v2
+
+      - name: Docker Push
+        if: "${{ github.event_name != 'pull_request' && inputs.DO_BUILD_DOCKER == true && always() }}"
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+  deploy:
+
+    if: "${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/develop' && inputs.DO_DEPLOY == true }}"
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set up Kubectl
+        uses: azure/setup-kubectl@v1
+        with:
+          version: 'v1.22.11'
+
+      - name: Configure Kubectl
+        run: |
+          echo ${{ secrets.KUBE_INT_CONFIG }} | base64 -d > kubeconfig
+        env:
+          KUBE_CONFIG: ${{ secrets.KUBE_INT_CONFIG }}
+
+      - name: Deploy to ${{ secrets.K8S_CONTEXT }}
+        run: |
+          kubectl --kubeconfig=./kubeconfig \
+            --context=${{ secrets.K8S_CONTEXT }} \
+            patch ${{ inputs.NAME_PROJECT }}-${{ inputs.DEPLOY }} -p '{"spec":{"template":{"metadata":{"labels":{"build_number":"${{ github.run_id }}"}}}}}'
