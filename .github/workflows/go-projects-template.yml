@@ -217,7 +217,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      NAME_REPO: ${{ inputs.IMAGE_NAME }} | cut -d "/" -f 2
+      NAME_REPO: ${{ inputs.IMAGE_NAME | cut -d "/" -f 2 }}
 
     steps:
       - name: Set up Kubectl
