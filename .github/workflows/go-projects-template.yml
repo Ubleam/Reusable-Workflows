@@ -99,7 +99,6 @@ jobs:
     steps:
 
       - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
       - name: Setup Go environment
         uses: actions/setup-go@v3
         with:
@@ -219,17 +218,12 @@ jobs:
     runs-on: ubuntu-latest
 
 
-    # env:
-    #   MA_VARIABLE: ${{ shell("echo ${{ inputs.IMAGE_NAME }} | cut -d "/" -f 2") }}
-
     steps:
       - name: Set up Kubectl
         uses: azure/setup-kubectl@v1
         with:
           version: 'v1.22.11'
 
-      - name: Set env
-        run: echo "GITHUB_SHA_SHORT=$(echo $GITHUB_SHA | cut -d "/" -f 2)" >> $GITHUB_ENV
 
       - name: Configure Kubectl
         run: |
@@ -240,9 +234,7 @@ jobs:
 
       - name: Deploy to ${{ secrets.K8S_CONTEXT }}
         run: |
-          echo $GITHUB_ENV
-          echo $GITHUB_SHA_SHORT
-# REPO_NAME=$(echo ${{ inputs.IMAGE_NAME }} | cut -d "/" -f 2)
-# kubectl --kubeconfig=./kubeconfig \
-#   --context=${{ secrets.K8S_CONTEXT }} \
-#   patch ${{ inputs.DEPLOY }} $REPO_NAME-${{ inputs.DEPLOY }} -p '{"spec":{"template":{"metadata":{"labels":{"build_number":"${{ github.run_id }}"}}}}}'
+          REPO_NAME=$(echo ${{ inputs.IMAGE_NAME }} | cut -d "/" -f 2)
+          kubectl --kubeconfig=./kubeconfig \
+            --context=${{ secrets.K8S_CONTEXT }} \
+            patch ${{ inputs.DEPLOY }} $REPO_NAME-${{ inputs.DEPLOY }} -p '{"spec":{"template":{"metadata":{"labels":{"build_number":"${{ github.run_id }}"}}}}}'
