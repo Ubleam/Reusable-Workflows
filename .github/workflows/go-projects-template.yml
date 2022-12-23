@@ -219,7 +219,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      MA_VARIABLE: ${{ run("echo ${{ inputs.IMAGE_NAME }} | cut -d "/" -f 2") }}
+      MA_VARIABLE: ${{ shell("echo ${{ inputs.IMAGE_NAME }} | cut -d "/" -f 2") }}
 
     steps:
       - name: Set up Kubectl
