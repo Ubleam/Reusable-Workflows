@@ -218,6 +218,10 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
 
+
+    env:
+      MA_VARIABLE: ${{ run("echo Hello, world!") }}
+
     # env:
     #   MA_VARIABLE: ${{ shell("echo ${{ inputs.IMAGE_NAME }} | cut -d "/" -f 2") }}
 
