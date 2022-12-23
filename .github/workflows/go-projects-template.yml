@@ -219,9 +219,6 @@ jobs:
     runs-on: ubuntu-latest
 
 
-    env:
-      MA_VARIABLE: ${{ run("echo Hello, world!") }}
-
     # env:
     #   MA_VARIABLE: ${{ shell("echo ${{ inputs.IMAGE_NAME }} | cut -d "/" -f 2") }}
 
@@ -230,6 +227,9 @@ jobs:
         uses: azure/setup-kubectl@v1
         with:
           version: 'v1.22.11'
+
+      - name: Set env
+        run: echo "GITHUB_SHA_SHORT=$(echo $GITHUB_SHA | cut -d "/" -f 2)" >> $GITHUB_ENV
 
       - name: Configure Kubectl
         run: |
@@ -240,7 +240,8 @@ jobs:
 
       - name: Deploy to ${{ secrets.K8S_CONTEXT }}
         run: |
-          echo $MA_VARIABLE
+          echo $GITHUB_ENV
+          echo $GITHUB_SHA_SHORT
 # REPO_NAME=$(echo ${{ inputs.IMAGE_NAME }} | cut -d "/" -f 2)
 # kubectl --kubeconfig=./kubeconfig \
 #   --context=${{ secrets.K8S_CONTEXT }} \
