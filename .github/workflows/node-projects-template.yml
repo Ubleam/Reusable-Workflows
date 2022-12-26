@@ -73,11 +73,6 @@ jobs:
 
     steps:
           
-      - name: get repo name
-        id : repo
-        run: |
-          echo ls
-          
       - name: Check out repository
         uses: actions/checkout@v3
 
@@ -174,7 +169,6 @@ jobs:
           with:
             name: source
         - run: unzip source.zip
-        - run: ls
         - uses: sonarsource/sonarqube-scan-action@master
           env:
             SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -190,7 +184,7 @@ jobs:
 
     if: "${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/develop' && inputs.DO_DEPLOY == true }}"
     runs-on: ubuntu-latest
-    needs: code-analysis
+    needs: build
     steps:
       - name: Set up Kubectl
         uses: azure/setup-kubectl@v1
