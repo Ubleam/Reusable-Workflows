@@ -73,6 +73,8 @@ jobs:
       contents: read
 
     steps:
+    
+      - id : repo_name
       - name: check repo name
         run: |
           REPO_NAME=$(echo ${{ inputs.IMAGE_NAME }} | cut -d "/" -f 2)
