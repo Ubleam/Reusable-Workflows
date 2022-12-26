@@ -74,10 +74,10 @@ jobs:
 
     steps:
       - name: get repo name
-      - id : REPO_NAME
+      - id : repo
         run: |
           REPO_NAME=$(echo ${{ inputs.IMAGE_NAME }} | cut -d "/" -f 2)
-          echo ($REPO_NAME) >> $GITHUB_OUTPUT
+          echo "REPO_NAME=$REPO_NAME" >> $GITHUB_OUTPUT
           
       - name: Check out repository
         uses: actions/checkout@v3
@@ -191,4 +191,4 @@ jobs:
         run: |
           kubectl --kubeconfig=./kubeconfig \
             --context=${{ secrets.K8S_CONTEXT }} \
-            patch deployment ${{steps.version.outputs.REPO_NAME}}-${{ inputs.DEPLOY }} -p '{"spec":{"template":{"metadata":{"labels":{"build_number":"${{ github.run_id }}"}}}}}'
+            patch deployment ${{steps.repo.outputs.REPO_NAME}}-${{ inputs.DEPLOY }} -p '{"spec":{"template":{"metadata":{"labels":{"build_number":"${{ github.run_id }}"}}}}}'
