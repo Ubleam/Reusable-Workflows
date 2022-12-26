@@ -76,8 +76,7 @@ jobs:
       - name: get repo name
         id : repo
         run: |
-          REPO_NAME=$(echo ${{ inputs.IMAGE_NAME }} | cut -d "/" -f 2)
-          echo "REPO_NAME=$REPO_NAME" >> $GITHUB_OUTPUT
+          echo ls
           
       - name: Check out repository
         uses: actions/checkout@v3
@@ -114,17 +113,7 @@ jobs:
         if: "${{ inputs.DO_BUILD == true }}"
         run: 	yarn build:prod
 
-      - uses: sonarsource/sonarqube-scan-action@master
-        if: "${{ inputs.DO_SONAR == true }}"
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
 
-      # - uses: sonarsource/sonarqube-quality-gate-action@master
-      #   if: "${{ inputs.DO_SONAR == true }}"
-      #   timeout-minutes: 5
-      #   env:
-      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
       - name: Lint
         if: "${{ always() && inputs.DO_LINT == true }}"
@@ -167,13 +156,36 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+      - uses: actions/upload-artifact@v2
+        with:
+          name: build
+          path: build
       
+  code-analysis:
+      if: "${{ inputs.DO_SONAR == true }}"
+      runs-on: ubuntu-latest
+      needs: build
+      steps:
+        - uses: actions/download-artifact@v2
+          with:
+            name: build
+        - run: ls build
+        - uses: sonarsource/sonarqube-scan-action@master
+          env:
+            SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+            SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+
+        - uses: sonarsource/sonarqube-quality-gate-action@master
+          if: "${{ inputs.DO_SONAR == true }}"
+          timeout-minutes: 5
+          env:
+             SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   deploy:
 
     if: "${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/develop' && inputs.DO_DEPLOY == true }}"
     runs-on: ubuntu-latest
-
+    needs: code-analysis
     steps:
       - name: Set up Kubectl
         uses: azure/setup-kubectl@v1
