@@ -156,11 +156,12 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+      - run: ls
       - uses: actions/upload-artifact@v2
         with:
           name: build
           path: .
-          exclude: '**/node_modules/**'
+          exclude: './node_modules/**'
       
   code-analysis:
       if: "${{ inputs.DO_SONAR == true }}"
