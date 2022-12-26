@@ -36,6 +36,9 @@ on:
       DO_DEPLOY:
         type: boolean
         default: true
+      DO_PUBLISH:
+        type: boolean
+        default: false
       
     secrets:
       REGISTRY:
@@ -150,6 +153,11 @@ jobs:
         with:
           name: source
           path: source.zip
+      - name: Publish Release
+        if: ${{DO_PUBLISH == true && github.event_name != 'pull_request' && github.ref == 'refs/heads/develop' }}
+        run: npm publish
+        env:
+            NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
       
   code-lint:
       if: "${{ inputs.DO_LINT == true }}"
