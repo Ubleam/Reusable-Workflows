@@ -62,7 +62,6 @@ on:
 env:
   REGISTRY: ${{ secrets.REGISTRY }}
   GH_ACCESS_TOKEN: ${{ secrets.ACTIONS_ACCESS_TOKEN }}
-  NAME_PROJECT: $(echo ${{ inputs.IMAGE_NAME }} | cut -d "/" -f 2)
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -72,9 +71,11 @@ jobs:
 
     steps:
           
-      - name: echo repo name
+      - name: get repo name
+        id : repo
         run: |
-          echo ${{ env.NAME_PROJECT }}
+          REPO_NAME=$(echo ${{ inputs.IMAGE_NAME }} | cut -d "/" -f 2)
+          echo "REPO_NAME=$REPO_NAME" >> $GITHUB_OUTPUT
           
       - name: Check out repository
         uses: actions/checkout@v3
@@ -186,7 +187,7 @@ jobs:
 
       - name: Deploy to ${{ secrets.K8S_CONTEXT }}
         run: |
-          echo ${{ env.NAME_PROJECT }}
+          echo ${{ steps.repo.outputs.NAME_PROJECT }}
           kubectl --kubeconfig=./kubeconfig \
             --context=${{ secrets.K8S_CONTEXT }} \
-            patch deployment ${{env.NAME_PROJECT}}-${{ inputs.DEPLOY }} -p '{"spec":{"template":{"metadata":{"labels":{"build_number":"${{ github.run_id }}"}}}}}'
+            patch deployment ${{ steps.repo.outputs.NAME_PROJECT }}-${{ inputs.DEPLOY }} -p '{"spec":{"template":{"metadata":{"labels":{"build_number":"${{ github.run_id }}"}}}}}'
