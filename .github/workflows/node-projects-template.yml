@@ -154,14 +154,14 @@ jobs:
           path: source.zip
           exclude: './node_modules'
       
-  code-analysis:
+  code-lint:
       if: "${{ inputs.DO_LINT == true }}"
       runs-on: ubuntu-latest
       needs: build
       steps:
         - run: yarn lint
 
-code-lint:
+  code-analysis:
       if: "${{ inputs.DO_SONAR == true }}"
       runs-on: ubuntu-latest
       needs: build
