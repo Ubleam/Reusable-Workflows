@@ -145,14 +145,11 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-      - run: rm -rf node_modules
-      - run: ls
       - run: zip source.zip *
       - uses: actions/upload-artifact@v2
         with:
           name: source
           path: source.zip
-          exclude: './node_modules'
       
   code-lint:
       if: "${{ inputs.DO_LINT == true }}"
@@ -163,7 +160,7 @@ jobs:
           with:
             name: source
         - run: unzip source.zip
-        - run: yarn run code-lint
+        - run: yarn run lint
 
   code-analysis:
       if: "${{ inputs.DO_SONAR == true }}"
