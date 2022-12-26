@@ -62,6 +62,7 @@ on:
 env:
   REGISTRY: ${{ secrets.REGISTRY }}
   GH_ACCESS_TOKEN: ${{ secrets.ACTIONS_ACCESS_TOKEN }}
+  NAME_PROJECT: $(echo ${{ inputs.IMAGE_NAME }} | cut -d "/" -f 2)
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -70,12 +71,6 @@ jobs:
       contents: read
 
     steps:
-    
-      - id : repo_name
-        name: Get repo name
-        run: |
-          REPO_NAME=$(echo ${{ inputs.IMAGE_NAME }} | cut -d "/" -f 2)
-          echo "NAME_PROJECT=${REPO_NAME}" >> $GITHUB_ENV
           
       - name: echo repo name
         run: |
@@ -191,7 +186,7 @@ jobs:
 
       - name: Deploy to ${{ secrets.K8S_CONTEXT }}
         run: |
-          echo ${{ inputs.NAME_PROJECT }}
+          echo ${{ env.NAME_PROJECT }}
           kubectl --kubeconfig=./kubeconfig \
             --context=${{ secrets.K8S_CONTEXT }} \
             patch deployment ${{env.NAME_PROJECT}}-${{ inputs.DEPLOY }} -p '{"spec":{"template":{"metadata":{"labels":{"build_number":"${{ github.run_id }}"}}}}}'
