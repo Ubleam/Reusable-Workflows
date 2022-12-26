@@ -76,7 +76,9 @@ jobs:
         run: |
           REPO_NAME=$(echo ${{ inputs.IMAGE_NAME }} | cut -d "/" -f 2)
           echo "NAME_PROJECT=$REPO_NAME" >> $GITHUB_ENV
-          echo ("NAME_PROJECT=$REPO_NAME")
+          echo $REPO_NAME
+          echo "NAME_PROJECT=$REPO_NAME"
+          echo "NAME_PROJECT=${REPO_NAME}"
           echo 'NAME_PROJECT=$REPO_NAME'
           echo NAME_PROJECT=$REPO_NAME
           
