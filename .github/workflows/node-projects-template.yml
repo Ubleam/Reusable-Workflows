@@ -74,7 +74,6 @@ jobs:
 
     steps:
       - name: check repo name
-      - id : repo_name
         run: |
           REPO_NAME=$(echo ${{ inputs.IMAGE_NAME }} | cut -d "/" -f 2)
           echo "REPO_NAME=$REPO_NAME" >> $GITHUB_OUTPUT
