@@ -192,4 +192,4 @@ jobs:
           echo $REPO_NAME
           kubectl --kubeconfig=./kubeconfig \
             --context=${{ secrets.K8S_CONTEXT }} \
-            patch deployment "$(REPO_NAME)-${{ inputs.DEPLOY }}" -p '{"spec":{"template":{"metadata":{"labels":{"build_number":"${{ github.run_id }}"}}}}}'
+            patch deployment "$($REPO_NAME)-${{ inputs.DEPLOY }}" -p '{"spec":{"template":{"metadata":{"labels":{"build_number":"${{ github.run_id }}"}}}}}'
