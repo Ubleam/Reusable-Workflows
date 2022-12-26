@@ -166,7 +166,7 @@ jobs:
           with:
             name: source
         - run: unzip source.zip
-        - run: yarn run lint
+        - run: yarn run code-lint
 
   code-analysis:
       if: "${{ inputs.DO_SONAR == true }}"
