@@ -75,16 +75,11 @@ jobs:
         name: Get repo name
         run: |
           REPO_NAME=$(echo ${{ inputs.IMAGE_NAME }} | cut -d "/" -f 2)
-          echo "NAME_PROJECT=$REPO_NAME" >> $GITHUB_ENV
-          echo $REPO_NAME
-          echo "NAME_PROJECT=$REPO_NAME"
-          echo "NAME_PROJECT=${REPO_NAME}"
-          echo 'NAME_PROJECT=$REPO_NAME'
-          echo NAME_PROJECT=$REPO_NAME
+          echo "NAME_PROJECT=${REPO_NAME}" >> $GITHUB_ENV
           
       - name: echo repo name
         run: |
-          echo ${{ inputs.NAME_PROJECT }}
+          echo ${{ env.NAME_PROJECT }}
           
       - name: Check out repository
         uses: actions/checkout@v3
