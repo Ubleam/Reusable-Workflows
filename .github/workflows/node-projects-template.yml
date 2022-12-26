@@ -9,9 +9,6 @@ on:
       USERNAME:
         type: string
         default: ${{ github.actor }}
-      NAME_PROJECT:
-        type: string
-        default: ${{ github.event.repository.name }}
       DEPLOY:
         type: string
         default: deploy
@@ -78,7 +75,7 @@ jobs:
         name: check repo name
         run: |
           REPO_NAME=$(echo ${{ inputs.IMAGE_NAME }} | cut -d "/" -f 2)
-          echo "REPO_NAME=$REPO_NAME" >> $GITHUB_OUTPUT
+          echo "NAME_PROJECT=$REPO_NAME" >> $GITHUB_ENV
           
       - name: Check out repository
         uses: actions/checkout@v3
@@ -193,4 +190,4 @@ jobs:
           REPO_NAME=$(echo ${{ inputs.IMAGE_NAME }} | cut -d "/" -f 2)
           kubectl --kubeconfig=./kubeconfig \
             --context=${{ secrets.K8S_CONTEXT }} \
-            patch deployment ${{steps.repo_name.outputs.REPO_NAME}}-${{ inputs.DEPLOY }} -p '{"spec":{"template":{"metadata":{"labels":{"build_number":"${{ github.run_id }}"}}}}}'
+            patch deployment ${{env.NAME_PROJECT}}-${{ inputs.DEPLOY }} -p '{"spec":{"template":{"metadata":{"labels":{"build_number":"${{ github.run_id }}"}}}}}'
