@@ -172,7 +172,6 @@ jobs:
   deploy:
 
     if: "${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/develop' && inputs.DO_DEPLOY == true }}"
-    needs: build
     runs-on: ubuntu-latest
 
     steps:
@@ -189,7 +188,8 @@ jobs:
 
       - name: Deploy to ${{ secrets.K8S_CONTEXT }}
         run: |
-          echo ${{ needs.build.outputs.NAME_PROJECT }}
+          REPO_NAME=$(echo ${{ inputs.IMAGE_NAME }} | cut -d "/" -f 2)
+          echo $REPO_NAME
           kubectl --kubeconfig=./kubeconfig \
             --context=${{ secrets.K8S_CONTEXT }} \
-            patch deployment ${{ needs.build.outputs.NAME_PROJECT }}-${{ inputs.DEPLOY }} -p '{"spec":{"template":{"metadata":{"labels":{"build_number":"${{ github.run_id }}"}}}}}'
+            patch deployment ${ REPO_NAME }-${{ inputs.DEPLOY }} -p '{"spec":{"template":{"metadata":{"labels":{"build_number":"${{ github.run_id }}"}}}}}'
