@@ -154,7 +154,7 @@ jobs:
           name: source
           path: source.zip
       - name: Publish Release
-        if: ${{DO_PUBLISH == true && github.event_name != 'pull_request' && github.ref == 'refs/heads/develop' }}
+        if: ${{inputs.DO_PUBLISH == true && github.event_name != 'pull_request' && github.ref == 'refs/heads/develop' }}
         run: npm publish
         env:
             NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
