@@ -68,6 +68,8 @@ jobs:
 
     permissions:
       contents: read
+    outputs:
+      NAME_PROJECT: ${{ steps.repo.outputs.NAME_PROJECT }}
 
     steps:
           
@@ -187,7 +189,7 @@ jobs:
 
       - name: Deploy to ${{ secrets.K8S_CONTEXT }}
         run: |
-          echo ${{ steps.repo.outputs.NAME_PROJECT }}
+          echo ${{ needs.build.outputs.NAME_PROJECT }}
           kubectl --kubeconfig=./kubeconfig \
             --context=${{ secrets.K8S_CONTEXT }} \
-            patch deployment ${{ steps.repo.outputs.NAME_PROJECT }}-${{ inputs.DEPLOY }} -p '{"spec":{"template":{"metadata":{"labels":{"build_number":"${{ github.run_id }}"}}}}}'
+            patch deployment ${{ needs.build.outputs.NAME_PROJECT }}-${{ inputs.DEPLOY }} -p '{"spec":{"template":{"metadata":{"labels":{"build_number":"${{ github.run_id }}"}}}}}'
