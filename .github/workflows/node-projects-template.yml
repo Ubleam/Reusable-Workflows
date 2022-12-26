@@ -105,7 +105,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
 
       - name: Test
-        if: "${{ DO_TEST == true }}"
+        if: "${{ inputs.DO_TEST }}"
         run: yarn test
 
       - name: Build
