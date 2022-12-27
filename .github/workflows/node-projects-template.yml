@@ -107,7 +107,11 @@ jobs:
       - name: Test
         if: "${{ inputs.DO_TEST }}"
         run: yarn test
-
+        
+      - name: Code lint
+        if: "${{ inputs.DO_LINT }}"
+        run: yarn lint
+        
       - name: Build
         if: "${{ inputs.DO_BUILD == true }}"
         run: 	yarn build:prod
@@ -159,24 +163,7 @@ jobs:
         run: npm publish
         env:
             NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
-      
-  code-lint:
-      if: "${{ inputs.DO_LINT == true }}"
-      runs-on: ubuntu-latest
-      needs: build
-      steps:
-        - name: Setup node environment (for building)
-          uses: actions/setup-node@v3
-          with:
-            node-version: ${{ inputs.NODE_VERSION }}
-            registry-url: ${{ secrets.OLD_REGISTRY_NPM }}
-            always-auth: true
-        - uses: actions/download-artifact@v2
-          with:
-            name: source
-        - run: unzip source.zip
-        - run: yarn run code-lint
-
+            
   code-analysis:
       if: "${{ inputs.DO_SONAR == true }}"
       runs-on: ubuntu-latest
