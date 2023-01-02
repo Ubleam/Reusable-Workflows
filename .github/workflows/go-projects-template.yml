@@ -16,7 +16,7 @@ on:
         type: string
       OVERRIDE_GO_PRIVATE: # any way to inherit + other secret ?
         type: string
-      DEPLOY:
+      K8S_TYPE:
         type: string
         default: deploy
       GET_LIB:
@@ -103,20 +103,8 @@ jobs:
         uses: actions/setup-go@v3
         with:
           go-version: ${{ env.GO_VERSION }}
-
-
-      - name: Cache Go
-        id: cache-go
-        uses: actions/cache@v3
-        env:
-          cache-name: cache-go
-        with:
-          path: ~/.cache/go-build
-          key: ${{ runner.os }}-go-${{ env.cache-go }}-${{ hashFiles('**/go.mod') }}
-          restore-keys: |
-            ${{ runner.os }}-go-${{ env.cache-go }}-
-            ${{ runner.os }}-go-
-            ${{ runner.os }}-
+          check-latest: true
+          cache: true
 
       - name: Config Git
         if: "${{ inputs.DO_CONF_GIT == true }}"
@@ -160,19 +148,19 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
 
-      # - uses: sonarsource/sonarqube-quality-gate-action@master
-      #   if: "${{ inputs.DO_SONAR == true }}"
-      #   timeout-minutes: 5
-      #   env:
-      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      - uses: sonarsource/sonarqube-quality-gate-action@master
+        if: "${{ inputs.DO_SONAR == true }}"
+        timeout-minutes: 5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         
       - name: Tests
         if: "${{ always() && inputs.DO_TEST == true }}"
         run: go test ./...
 
-      # - name: Lint
-      #   if: "${{ always() && inputs.DO_LINT == true }}"
-      #   run: go install ${{secrets.LIB_LINT}}; ${{secrets.CMD_LINT}}
+      - name: Lint
+        if: "${{ always() && inputs.DO_LINT == true }}"
+        run: go install ${{secrets.LIB_LINT}}; ${{secrets.CMD_LINT}}
 
       - name: Log in to the Container registry
         if: "${{ github.event_name != 'pull_request' && inputs.DO_BUILD_DOCKER == true && always() }}"
@@ -237,5 +225,4 @@ jobs:
           REPO_NAME=$(echo ${{ inputs.IMAGE_NAME }} | cut -d "/" -f 2)
           kubectl --kubeconfig=./kubeconfig \
             --context=${{ secrets.K8S_CONTEXT }} \
-            patch ${{ inputs.DEPLOY }} test-${{ inputs.DEPLOY }} -p '{"spec":{"template":{"metadata":{"labels":{"build_number":"${{ github.run_id }}"}}}}}'
-# patch ${{ inputs.DEPLOY }} $REPO_NAME-${{ inputs.DEPLOY }} -p '{"spec":{"template":{"metadata":{"labels":{"build_number":"${{ github.run_id }}"}}}}}'
+            patch ${{ inputs.K8S_TYPE }} $REPO_NAME-${{ inputs.K8S_TYPE }} -p '{"spec":{"template":{"metadata":{"labels":{"build_number":"${{ github.run_id }}"}}}}}'
