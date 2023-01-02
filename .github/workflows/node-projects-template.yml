@@ -84,6 +84,8 @@ jobs:
         with:
           node-version: ${{ inputs.NODE_VERSION }}
           registry-url: ${{ secrets.OLD_REGISTRY_NPM }}
+          cache: 'yarn'
+          cache-dependency-path: '**/yarn.lock'
           always-auth: true
 
       - name: Cache node_modules
@@ -100,7 +102,7 @@ jobs:
         run: git config --global ${{ secrets.GIT_CONFIG_KEY }} ${{ secrets.GIT_CONFIG_VALUE }}
 
       - name: Install dependencies
-        run: yarn
+        run: yarn install --frozen-lockfile
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
 
@@ -175,6 +177,9 @@ jobs:
             node-version: ${{ inputs.NODE_VERSION }}
             registry-url: ${{ secrets.OLD_REGISTRY_NPM }}
             always-auth: true
+            cache: 'yarn'
+            cache-dependency-path: '**/yarn.lock'
+            
         - uses: actions/download-artifact@v2
           with:
             name: source
