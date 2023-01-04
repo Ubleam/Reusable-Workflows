@@ -1,0 +1,92 @@
+name: Commun config for Android projects
+
+on:
+  workflow_call:
+    inputs:
+      DO_CONF_GIT:
+        type: boolean
+        default: true
+      DO_CACHE:
+        type: boolean
+        default: true
+      DO_CLEAN:
+        type: boolean
+        default: true
+      DO_BUILD:
+        type: boolean
+        default: true
+      DO_TEST:
+        type: boolean
+        default: true
+      DO_LINT:
+        type: boolean
+        default: true
+      DO_PUBLISH:
+        type: boolean
+        default: false
+      
+    secrets:
+      GIT_CONFIG_KEY:
+        required: true
+      GIT_CONFIG_VALUE:
+        required: true
+
+jobs:
+  build:
+        runs-on: ubuntu-latest
+
+        steps:
+        - uses: actions/checkout@v3
+
+        - name: Config Git
+          if: "${{ inputs.DO_CONF_GIT == true }}"
+          run: git config --global ${{ secrets.GIT_CONFIG_KEY }} ${{ secrets.GIT_CONFIG_VALUE }}
+        
+        - name: set up JDK 11
+          uses: actions/setup-java@v1
+          with:
+            java-version: 11
+
+        - name: Setup Android SDK
+          uses: android-actions/setup-android@v2
+
+        - uses: actions/cache@v2
+          if: "${{ inputs.DO_CACHE }}"
+          with:
+            path: |
+              ~/.gradle/caches
+              ~/.gradle/wrapper
+            key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+            restore-keys: |
+              ${{ runner.os }}-gradle-
+
+        - name: Restore gradle.properties
+          shell: bash
+          run: |
+            mkdir -p ~/.gradle/
+            echo "ubleam.nexus.url=https://nexus.ubleamops.com/repository/maven-public/" > ~/.gradle/gradle.properties
+            echo "ubleam.nexus.username=${{ secrets.NEXUS_USERNAME }}" >> ~/.gradle/gradle.properties
+            echo "ubleam.nexus.password=${{ secrets.NEXUS_PASSWORD }}" >> ~/.gradle/gradle.properties
+
+        - name: Grant execute permission for gradlew
+          run: chmod +x gradlew
+          
+        - name: Clean with Gradle
+          if: "${{ inputs.DO_CLEAN }}"
+          run: ./gradlew clean 
+          
+        - name: Lint with Gradle
+          if: "${{ inputs.DO_LINT }}"
+          run: ./gradlew lint
+          
+        - name: Tests with Gradle
+          if: "${{ inputs.DO_TEST }}"
+          run: ./gradlew test
+
+        - name: Build with Gradle
+          if: "${{ inputs.DO_BUILD }}"
+          run: ./gradlew assemble
+        
+        - name: Publish with Gradle
+          if: "${{ inputs.DO_PUBLISH && github.event_name != 'pull_request' }}"
+          run: ./gradlew publish
