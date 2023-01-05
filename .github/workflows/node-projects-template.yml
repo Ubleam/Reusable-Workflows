@@ -67,7 +67,7 @@ env:
   GH_ACCESS_TOKEN: ${{ secrets.ACTIONS_ACCESS_TOKEN }}
   PUBLISH: ${{inputs.DO_PUBLISH && github.event_name != 'pull_request' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/master') }}
   DEPLOY: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/develop' && inputs.DO_DEPLOY }}
-  BUILD_DOCKER: "${{ github.event_name != 'pull_request' && github.event_name != 'repository_dispatch' && inputs.DO_BUILD_DOCKER == true}}"
+  BUILD_DOCKER: "${{ inputs.DO_BUILD_DOCKER && github.event_name != 'pull_request' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/master') }}"
 jobs:
   build:
     runs-on: ubuntu-latest
