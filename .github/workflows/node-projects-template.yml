@@ -160,10 +160,9 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
       - name: Publish Release
         if: ${{env.PUBLISH}}
-        run: npm publish --registry ${{secrets.OLD_REGISTRY_NPM}}
-        
+        run: npm publish --registry ${{secrets.NPM_REGISTRY}}
         env:
-            NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+            NODE_AUTH_TOKEN: ${{ secrets.GH_PACKAGES }}
       - run: zip source.zip *
       - uses: actions/upload-artifact@v2
         with:
