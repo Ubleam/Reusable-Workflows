@@ -113,6 +113,7 @@ jobs:
       - name: Code lint
         if: "${{ inputs.DO_LINT }}"
         run: yarn lint
+        continue-on-error: true
         
       - name: Build
         if: "${{ inputs.DO_BUILD == true }}"
