@@ -158,16 +158,16 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-      - run: zip source.zip *
-      - uses: actions/upload-artifact@v2
-        with:
-          name: source
-          path: source.zip
       - name: Publish Release
         if: ${{env.PUBLISH}}
         run: npm publish
         env:
             NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+      - run: zip source.zip *
+      - uses: actions/upload-artifact@v2
+        with:
+          name: source
+          path: source.zip
             
   code-analysis:
       if: "${{ inputs.DO_SONAR }}"
