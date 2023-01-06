@@ -167,7 +167,6 @@ jobs:
           cache: 'yarn'
           cache-dependency-path: '**/yarn.lock'
           always-auth: true
-      - run: cat ~/.npmrc
       - name: Publish Release
         if: ${{env.PUBLISH}}
         run: npm publish --registry=${{ secrets.NPM_REGISTRY }}
