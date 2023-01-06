@@ -24,6 +24,9 @@ on:
       DO_SONAR:
         type: boolean
         default: true
+      DO_UPLOAD_ARTIFACT:
+        type: boolean
+        default: false
       DO_PUBLISH:
         type: boolean
         default: false
@@ -32,10 +35,6 @@ on:
       GIT_CONFIG_KEY:
         required: true
       GIT_CONFIG_VALUE:
-        required: true
-      SONAR_TOKEN:
-        required: true
-      SONAR_HOST_URL:
         required: true
 
 jobs:
@@ -59,15 +58,15 @@ jobs:
         - name: Setup Android SDK
           uses: android-actions/setup-android@v2
 
+        - name: Decode and save keystore to file for apps
+          run: |
+            echo ${{ secrets.KEY_STORE_FUSION_FILE }} | base64 -d > KeyStore-Fusion.jks
+            echo ${{ secrets.KEY_STORE_AIRLIQUIDE_FILE }} | base64 -d > KeyStore-Airliquide.jks
+            
         - name: Restore gradle.properties
-          shell: bash
           run: |
             mkdir -p ~/.gradle/
-            echo "ubleam.nexus.url=https://nexus.ubleamops.com/repository/maven-public/" > ~/.gradle/gradle.properties
-            echo "ubleam.nexus.username=${{ secrets.NEXUS_USERNAME }}" >> ~/.gradle/gradle.properties
-            echo "ubleam.nexus.password=${{ secrets.NEXUS_PASSWORD }}" >> ~/.gradle/gradle.properties
-            echo "sonar.url=${{ secrets.SONAR_HOST_URL }}" >> ~/.gradle/gradle.properties
-            echo "sonar.login=${{ secrets.SONAR_TOKEN }}" >> ~/.gradle/gradle.properties
+            echo "${{ secrets.ANDROID_GRADLE_PROPERTIES }}" > ~/.gradle/gradle.properties
 
         - name: Grant execute permission for gradlew
           run: chmod +x gradlew
@@ -97,8 +96,33 @@ jobs:
 
         - name: Build with Gradle
           if: "${{ inputs.DO_BUILD }}"
-          run: ./gradlew assemble
+          run: ./gradlew ${{ inputs.BUILD_TASK }}
         
         - name: Publish with Gradle
           if: "${{ inputs.DO_PUBLISH && github.event_name != 'pull_request' }}"
           run: ./gradlew publish
+
+        - name: Move Artifact bundle into current folder
+          if: "${{ inputs.DO_UPLOAD_ARTIFACT }}"
+          shell: bash
+          run: |
+            mv ${{ inputs.ARTIFACT_PATH }} artifact.aab
+
+        - name: Upload APK artifact
+          uses: actions/upload-artifact@v2
+          if: "${{ inputs.DO_UPLOAD_ARTIFACT }}"
+          with:
+            name: universal-apk
+            path: artifact.aab
+            retention-days: 7
+        
+        - name: App Center
+          uses: wzieba/AppCenter-Github-Action@v1.3.3
+          if: "${{ inputs.DO_APP_CENTER }}"
+          with:
+            appName: ${{ inputs.APP_CENTER_APP_NAME }}
+            token: ${{secrets.APP_CENTER_TOKEN}}
+            group: ${{ inputs.APP_CENTER_GROUP }}
+            file: artifact.aab
+            notifyTesters: ${{ inputs.APP_CENTER_NOTIFY }}
+            debug: true
