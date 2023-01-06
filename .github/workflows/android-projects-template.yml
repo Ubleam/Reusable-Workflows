@@ -31,6 +31,16 @@ on:
         default: false
       ARTIFACT_PATH:
         type: string
+      DO_APP_CENTER:
+        type: boolean
+        default: false
+      APP_CENTER_APP_NAME:
+        type: string
+      APP_CENTER_GROUP:
+        type: string
+      APP_CENTER_NOTIFY:
+        type: boolean
+        default: false
       DO_PUBLISH:
         type: boolean
         default: false
