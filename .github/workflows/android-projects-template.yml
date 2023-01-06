@@ -29,6 +29,8 @@ on:
       DO_UPLOAD_ARTIFACT:
         type: boolean
         default: false
+      ARTIFACT_PATH:
+        type: string
       DO_PUBLISH:
         type: boolean
         default: false
