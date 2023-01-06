@@ -85,7 +85,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ inputs.NODE_VERSION }}
-          registry-url: ${{ secrets.NPM_REGISTRY }}
+          registry-url: ${{ secrets.OLD_REGISTRY_NPM }}
           cache: 'yarn'
           cache-dependency-path: '**/yarn.lock'
           always-auth: true
@@ -106,7 +106,7 @@ jobs:
       - name: Install dependencies
         run: yarn install
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GH_PACKAGES }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
 
       - name: Test
         if: "${{ inputs.DO_TEST }}"
@@ -158,11 +158,20 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          
+      - name: Setup node environment (for publish)
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ inputs.NODE_VERSION }}
+          registry-url: ${{ secrets.NPM_REGISTRY }}
+          cache: 'yarn'
+          cache-dependency-path: '**/yarn.lock'
+          always-auth: true
       - name: Publish Release
         if: ${{env.PUBLISH}}
-        run: npm publish
+        run: npm publish --registry=${{ secrets.NPM_REGISTRY }}
         env:
-            NODE_AUTH_TOKEN: ${{ secrets.GH_PACKAGES }}
+            NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - run: zip source.zip *
       - uses: actions/upload-artifact@v2
         with:
@@ -174,14 +183,6 @@ jobs:
       runs-on: ubuntu-latest
       needs: build
       steps:
-        - name: Setup node environment (for building)
-          uses: actions/setup-node@v3
-          with:
-            node-version: ${{ inputs.NODE_VERSION }}
-            registry-url: ${{ secrets.OLD_REGISTRY_NPM }}
-            always-auth: true
-            cache: 'yarn'
-            cache-dependency-path: '**/yarn.lock'
             
         - uses: actions/download-artifact@v2
           with:
